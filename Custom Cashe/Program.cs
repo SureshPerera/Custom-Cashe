@@ -20,7 +20,8 @@ public class Main
     public void Run()
     {
         Stopwatch stopwatch = new Stopwatch();
-        ShowDataDownloder showDataDownloder = new ShowDataDownloder();
+        
+        var showDataDownloder = new ShowDataDownloder();
         
         stopwatch.Start();
         Console.WriteLine(showDataDownloder.DataDownload("id1"));
@@ -32,17 +33,8 @@ public class Main
         Console.WriteLine(showDataDownloder.DataDownload("id1"));
         stopwatch.Stop();
         Console.WriteLine($"Time is : {stopwatch.ElapsedMilliseconds}s");
-        Console.WriteLine("\n\n\n");
-        stopwatch.Start();
-        Console.WriteLine(showDataDownloder.SlowDataDownload("id1"));
-        Console.WriteLine(showDataDownloder.SlowDataDownload("id2"));
-        Console.WriteLine(showDataDownloder.SlowDataDownload("id3"));
-        Console.WriteLine(showDataDownloder.SlowDataDownload("id1"));
-        Console.WriteLine(showDataDownloder.SlowDataDownload("id5"));
-        Console.WriteLine(showDataDownloder.SlowDataDownload("id3"));
-        Console.WriteLine(showDataDownloder.SlowDataDownload("id1"));
-        stopwatch.Stop();
-        Console.WriteLine($"Time is : {stopwatch.ElapsedMilliseconds}s");
+       
+        
 
     }
     public void End()
@@ -56,27 +48,37 @@ public interface IDataDownloder
 {
     public string DataDownload(string resource);
 }
-public class ShowDataDownloder  : IDataDownloder 
+public class Cashe<TKey, TData>
 {
-    public List<string> CashData = new List<string>();
+    private readonly Dictionary<TKey, TData> _cashData = new();
 
-    public string DataDownload(string resource)
+    public TData Get(TKey key,Func<TKey,TData> getForTheFirstTime)
     {
-        if (!CashData.Contains(resource))
+        if(! _cashData.ContainsKey(key))
         {
-            
-            CashData.Add(resource);
-            Thread.Sleep(2000);
-            return $"some data for {resource}";
+            _cashData[key] = getForTheFirstTime(key);
         }
+        return _cashData[key];
+    }
 
-        return $"some data for {resource} cash";
+  
+}
+
+public class ShowDataDownloder : IDataDownloder 
+{
+    private readonly Cashe<string, string> _cash = new();
+
+    public string DataDownload  (string resource)
+    {
+
+        return _cash.Get(resource,DataDownloadWithOutCashing);
         
     }
-    public string SlowDataDownload(string resource)
-    {  
-            Thread.Sleep(2000);
-            return $"some data for {resource}";
+    private string DataDownloadWithOutCashing(string resource)
+    {
+
+        Thread.Sleep(2000);
+        return $"some data for {resource}";
 
     }
 
